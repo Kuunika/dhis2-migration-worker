@@ -1,0 +1,27 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.5.3",
+    "chalk": "^2.4.2",
+    "dotenv": "^6.2.0",
+    "mysql2": "^1.6.4",
+    "nodemon": "^1.18.9",
+    "ora": "^3.0.0",
+    "pg": "^7.8.0",
+    "pg-hstore": "^2.3.2",
+    "pika": "0.0.1-security",
+    "sequelize": "^4.42.0",
+    "sqlite3": "^4.0.6",
+    "tedious": "^4.1.3"
+  }
+}

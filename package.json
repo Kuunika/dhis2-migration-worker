@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "amqplib": "^0.5.3",
+    "axios": "^0.18.0",
     "chalk": "^2.4.2",
     "dotenv": "^6.2.0",
     "mysql2": "^1.6.4",

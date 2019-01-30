@@ -10,6 +10,7 @@ const fields = {
   isValueValid: Sequelize.BOOLEAN,
   isElementAuthorized: Sequelize.BOOLEAN,
   isProcessed: Sequelize.BOOLEAN,
+  period: Sequelize.STRING,
 }
 
 const options = {

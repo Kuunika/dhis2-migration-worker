@@ -41,55 +41,56 @@ const handleQueueConnection = async (err, conn) => {
     ch.consume(
       q,
       async function (msg) {
-        console.log(" [x] Received %s", msg.content.toString());
+        try {
+          console.log(" [x] Received %s", msg.content.toString());
 
-        //acknowlegde on migration finished
-        const acknowlegdementEmitter = new EventEmitter();
-        acknowlegdementEmitter.on('$migrationDone', () => {
-          ch.ack(msg);
-        });
+          //acknowlegde on migration finished
+          const acknowlegdementEmitter = new EventEmitter();
+          acknowlegdementEmitter.on('$migrationDone', () => {
+            ch.ack(msg);
+          });
 
-        const { migrationId = null } = JSON.parse(msg.content.toString());
+          const { migrationId = null } = JSON.parse(msg.content.toString());
 
-        let isMgrating = true;
+          let isMgrating = true;
 
-        while (isMgrating) {
-          const migration = await Migration.findByPk(migrationId);
-          if (migration) {
-            const client = await Client.findByPk(migration.dataValues.clientId);
-            if (client) {
-              const dataSet = await DataSet.findOne({
-                clientId: client.id
-              });
-              if (dataSet) {
-                const migrationDataElements = await MigrationDataElements.findAll(
-                  {
-                    where: {
-                      migrationId: migration.dataValues.id
+          while (isMgrating) {
+            const migration = await Migration.findByPk(migrationId);
+            if (migration) {
+              const client = await Client.findByPk(migration.dataValues.clientId);
+              if (client) {
+                const dataSet = await DataSet.findOne({
+                  clientId: client.id
+                });
+                if (dataSet) {
+                  const migrationDataElements = await MigrationDataElements.findAll(
+                    {
+                      where: {
+                        migrationId: migration.dataValues.id,
+                        isMigrated: false
+                      }
                     }
-                  }
-                );
-                if (migrationDataElements) {
-                  const data = [];
+                  );
+                  if (migrationDataElements) {
+                    const data = [];
 
-                  for (const m of migrationDataElements) {
-                    const dataElement = await DataElement.findByPk(
-                      m.dataValues.dataElementId
-                    );
-                    if (dataElement) {
-                      await data.push({
-                        dataElement: dataElement.dataValues.dataElementId,
-                        value: m.dataValues.value,
-                        orgUnit: m.dataValues.organizationUnitCode,
-                        period: m.dataValues.period,
-                        id: m.dataValues.id
-                      });
+                    for (const m of migrationDataElements) {
+                      const dataElement = await DataElement.findByPk(
+                        m.dataValues.dataElementId
+                      );
+                      if (dataElement) {
+                        await data.push({
+                          dataElement: dataElement.dataValues.dataElementId,
+                          value: m.dataValues.value,
+                          orgUnit: m.dataValues.organizationUnitCode,
+                          period: m.dataValues.period,
+                          id: m.dataValues.id
+                        });
+                      }
                     }
-                  }
-                  const dataChunks = _.chunk(data, process.env.MW_DATA_CHUNK_SIZE || 200);
+                    const dataChunks = _.chunk(data, process.env.MW_DATA_CHUNK_SIZE || 200);
 
-                  for (const dataChunk of dataChunks) {
-                    try {
+                    for (const dataChunk of dataChunks) {
                       const request = await axios({
                         url: `${process.env.MW_DHIS2_URL}/dataValueSets`,
                         method: 'POST',
@@ -107,20 +108,17 @@ const handleQueueConnection = async (err, conn) => {
                         { isMigrated: true },
                         { where: { id: dataChunk.map(dc => dc.id) } }
                       );
-
                       console.log(request.data.importCount);
                     }
-                    catch (err) {
-                      //TODO:  implement logic to work with failed migration chunks
-                      console.log('Error: ', err.message);
-                    }
+                    await acknowlegdementEmitter.emit('$migrationDone');
+                    isMgrating = false;
                   }
-                  await acknowlegdementEmitter.emit('$migrationDone');
-                  isMgrating = false;
                 }
               }
             }
           }
+        } catch (err) {
+          spinner.warn(`Error: ${err.message}`);
         }
       },
       options

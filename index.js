@@ -1,6 +1,8 @@
 const amqp = require("amqplib/callback_api");
 const ora = require("ora");
 const axios = require("axios");
+const _ = require('lodash');
+const EventEmitter = require('events');
 
 const {
   getClientModel,
@@ -29,7 +31,7 @@ const handleQueueConnection = async (err, conn) => {
   const DataElement = await getDataElementModel(sequelize);
 
   const handleChannel = async (err, ch) => {
-    const q = process.env.MW_QUEUE_NAME || "DHIS2_INTERGRATION_MEDIATOR";
+    const q = process.env.MW_QUEUE_NAME || "INTERGRATION_MEDIATOR";
 
     ch.assertQueue(q, {
       durable: true
@@ -38,73 +40,93 @@ const handleQueueConnection = async (err, conn) => {
     spinner.succeed(`[*] Waiting for messages in ${q}. To exit press CTRL+C`);
     ch.consume(
       q,
-      async function(msg) {
+      async function (msg) {
         console.log(" [x] Received %s", msg.content.toString());
+
+        //acknowlegde on migration finished
+        const acknowlegdementEmitter = new EventEmitter();
+        acknowlegdementEmitter.on('$migrationDone', () => {
+          ch.ack(msg);
+        });
 
         const { migrationId = null } = JSON.parse(msg.content.toString());
 
-        const migration = await Migration.findById(migrationId);
-        if (migration) {
-          const client = await Client.findById(migration.dataValues.clientId);
-          if (client) {
-            const dataSet = await DataSet.findOne({
-              clientId: client.id
-            });
-            if (dataSet) {
-              const migrationDataElements = await MigrationDataElements.findAll(
-                {
-                  where: {
-                    migrationId: migration.dataValues.id
-                  }
-                }
-              );
-              if (migrationDataElements) {
-                const data = [];
+        let isMgrating = true;
 
-                for (const m of migrationDataElements) {
-                  const dataElement = await DataElement.findById(
-                    m.dataValues.dataElementId
-                  );
-                  // channel event
-                  if (dataElement) {
-                    await data.push({
-                      dataElement: dataElement.dataValues.dataElementId,
-                      value: m.dataValues.value,
-                      orgUnit: m.dataValues.organizationUnitCode,
-                      period: m.dataValues.period
-                    });
+        while (isMgrating) {
+          const migration = await Migration.findByPk(migrationId);
+          if (migration) {
+            const client = await Client.findByPk(migration.dataValues.clientId);
+            if (client) {
+              const dataSet = await DataSet.findOne({
+                clientId: client.id
+              });
+              if (dataSet) {
+                const migrationDataElements = await MigrationDataElements.findAll(
+                  {
+                    where: {
+                      migrationId: migration.dataValues.id
+                    }
                   }
-                }
-                const req = await axios({
-                  url:
-                    "http://dhistest.kuunika.org:1414/dhis/api/dataValueSets",
-                  method: "POST",
-                  data: {
-                    dataValues: data
-                  },
-                  auth: {
-                    username: "haroontwalibu",
-                    password: "Mamelodi@19"
-                  }
-                }).catch(error => console.log(error));
+                );
+                if (migrationDataElements) {
+                  const data = [];
 
-                await console.log(req.data.importCount);
+                  for (const m of migrationDataElements) {
+                    const dataElement = await DataElement.findByPk(
+                      m.dataValues.dataElementId
+                    );
+                    if (dataElement) {
+                      await data.push({
+                        dataElement: dataElement.dataValues.dataElementId,
+                        value: m.dataValues.value,
+                        orgUnit: m.dataValues.organizationUnitCode,
+                        period: m.dataValues.period,
+                        id: m.dataValues.id
+                      });
+                    }
+                  }
+                  const dataChunks = _.chunk(data, process.env.MW_DATA_CHUNK_SIZE || 200);
+
+                  for (const dataChunk of dataChunks) {
+                    try {
+                      const request = await axios({
+                        url: `${process.env.MW_DHIS2_URL}/dataValueSets`,
+                        method: 'POST',
+                        data: {
+                          dataValues: dataChunk
+                        },
+                        auth: {
+                          username: process.env.MW_DHIS2_USERNAME,
+                          password: process.env.MW_DHIS2_PASSWORD
+                        }
+                      })
+
+                      //update the migrationdataelement as migrated
+                      await MigrationDataElements.update(
+                        { isMigrated: true },
+                        { where: { id: dataChunk.map(dc => dc.id) } }
+                      );
+
+                      console.log(request.data.importCount);
+                    }
+                    catch (err) {
+                      //TODO:  implement logic to work with failed migration chunks
+                      console.log('Error: ', err.message);
+                    }
+                  }
+                  await acknowlegdementEmitter.emit('$migrationDone');
+                  isMgrating = false;
+                }
               }
             }
           }
         }
-
-        await setTimeout(function() {
-          console.log(" [x] Done");
-          ch.ack(msg);
-        }, 1000);
       },
       options
     );
   };
-
   await conn.createChannel(handleChannel);
-
   spinner.stop();
 };
 

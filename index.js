@@ -3,6 +3,8 @@ const ora = require("ora");
 const axios = require("axios");
 const _ = require('lodash');
 const EventEmitter = require('events');
+const _Sequelize = require('sequelize');
+const moment = require('moment');
 
 const {
   getClientModel,
@@ -72,6 +74,13 @@ const handleQueueConnection = async (err, conn) => {
                     }
                   );
                   if (migrationDataElements) {
+
+                    //reporting purposes
+                    await Migration.update(
+                      { totalDataElements: migrationDataElements.length },
+                      { where: { id: migrationId } }
+                    );
+
                     const data = [];
 
                     for (const m of migrationDataElements) {
@@ -103,6 +112,12 @@ const handleQueueConnection = async (err, conn) => {
                         }
                       })
 
+                      //reporting purposes
+                      await Migration.update(
+                        { totalMigratedElements: data.length, totalFailedElements: 0 },
+                        { where: { id: migrationId } }
+                      );
+
                       //update the migrationdataelement as migrated
                       await MigrationDataElements.update(
                         { isMigrated: true },
@@ -110,6 +125,13 @@ const handleQueueConnection = async (err, conn) => {
                       );
                       console.log(request.data.importCount);
                     }
+                    //reporting purposes
+                    await Migration.update(
+                      {
+                        isMigrated: true, migrationCompletedAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+                      },
+                      { where: { id: migrationId } }
+                    );
                     await acknowlegdementEmitter.emit('$migrationDone');
                     isMgrating = false;
                   }

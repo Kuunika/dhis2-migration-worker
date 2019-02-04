@@ -20,6 +20,39 @@ const options = {
   noAck: false
 };
 
+const sendEmail = (
+  migrationId,
+  email,
+  flag) => {
+  const host = process.env.MW_EMAIL_QUEUE_HOST || 'amqp://localhost';
+
+  amqp.connect(
+    host,
+    function (err, conn) {
+      if (err) console.log(err);
+      conn.createChannel(function (err, ch) {
+        if (err) console.log(err);
+
+        const options = {
+          durable: true,
+        };
+
+        const queueName =
+          process.env.MW_EMAIL_QUEUE_NAME ||
+          'DHIS2_EMAIL_INTEGRATION_QUEUE';
+
+        ch.assertQueue(queueName, options);
+        const message = JSON.stringify({ migrationId, email, flag });
+        ch.sendToQueue(queueName, Buffer.from(message), {
+          persistent: true,
+        });
+        console.log(`[x] Sent ${message}`);
+        setTimeout(() => conn.close(), 500);
+      });
+    },
+  );
+}
+
 const handleQueueConnection = async (err, conn) => {
   if (err) console.log(err);
 
@@ -132,6 +165,8 @@ const handleQueueConnection = async (err, conn) => {
                       },
                       { where: { id: migrationId } }
                     );
+                    await sendEmail(migrationId, 'openlmis@gmail.com', false);
+                    await console.log('email sent');
                     await acknowlegdementEmitter.emit('$migrationDone');
                     isMigrating = false;
                   }

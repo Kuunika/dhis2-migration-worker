@@ -54,9 +54,9 @@ const handleQueueConnection = async (err, conn) => {
 
           const { migrationId = null } = JSON.parse(msg.content.toString());
 
-          let isMgrating = true;
+          let isMigrating = true;
 
-          while (isMgrating) {
+          while (isMigrating) {
             const migration = await Migration.findByPk(migrationId);
             if (migration) {
               const client = await Client.findByPk(migration.dataValues.clientId);
@@ -118,7 +118,7 @@ const handleQueueConnection = async (err, conn) => {
                         { where: { id: migrationId } }
                       );
 
-                      //update the migrationdataelement as migrated
+                      //mark the migrationdataelement as migrated
                       await MigrationDataElements.update(
                         { isMigrated: true },
                         { where: { id: dataChunk.map(dc => dc.id) } }
@@ -133,7 +133,7 @@ const handleQueueConnection = async (err, conn) => {
                       { where: { id: migrationId } }
                     );
                     await acknowlegdementEmitter.emit('$migrationDone');
-                    isMgrating = false;
+                    isMigrating = false;
                   }
                 }
               }

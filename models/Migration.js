@@ -15,7 +15,6 @@ const fields = {
   totalDataElements: Sequelize.BIGINT(11),
   totalFailedElements: Sequelize.BIGINT(11),
   migrationCompletedAt: Sequelize.STRING,
-  isMigrated: Sequelize.BOOLEAN,
   clientId: Sequelize.BIGINT(11)
 }
 

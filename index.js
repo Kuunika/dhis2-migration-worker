@@ -78,7 +78,9 @@ const handleQueueConnection = async (err, conn) => {
   }
 
   const pushToFailureQueue = (
-    migrationId
+    migrationId,
+    email,
+    client
   ) => {
     const host = process.env.MW_FAILURE_QUEUE_HOST || 'amqp://localhost';
     amqp.connect(
@@ -96,7 +98,7 @@ const handleQueueConnection = async (err, conn) => {
             'DHIS2_INTEGRATION_FAIL_QUEUE';
 
           ch.assertQueue(queueName, options);
-          const message = JSON.stringify({ migrationId });
+          const message = JSON.stringify({ migrationId, email, client });
           ch.sendToQueue(queueName, Buffer.from(message), {
             persistent: true,
           });
@@ -129,7 +131,9 @@ const handleQueueConnection = async (err, conn) => {
         let failureOccured = false;
         let isMigrating = true;
         let offset = 0;
-        const limit = Number(process.env.MW_DATA_CHUNK_SIZE || 5);
+
+        //TODO: work on chunck size
+        const limit = Number(process.env.MW_DATA_CHUNK_SIZE || 200);
 
         while (isMigrating) {
           const where = { migrationId, isMigrated: false }
@@ -156,9 +160,8 @@ const handleQueueConnection = async (err, conn) => {
                 });
               }
             }
-
             const response = await axios({
-              url: `${process.env.MW_DHIS2_URL}/dataValueSet`,
+              url: `${process.env.MW_DHIS2_URL}/dataValueSets`,
               method: 'POST',
               data: {
                 dataValues
@@ -169,38 +172,46 @@ const handleQueueConnection = async (err, conn) => {
               }
             }).catch(err => console.log(err.message));
 
+            //all good here
             if (response) {
               await updateOnSucessfullMigration(migrationId, dataValues.length);
-              const ids = migrationDataElements.map(mde => mde.dataValues.id);
-              //migration done alright
-              //TODO:   update on real id's
+              const ids = await dataValues.map(dataValue => dataValue.id);
               await MigrationDataElements.update(
                 { isMigrated: true },
-                { where: { id: 0 } }
+                { where: { id: ids } }
               );
             } else {
-              //the failure queue must be ingaged
               failureOccured = true;
-              const failedDataElements = migrationDataElements.map(mde => ({
-                dataElementId: mde.dataValues.dataElementId,
-                value: mde.dataValues.value,
-                organizationUnitCode: mde.dataValues.organizationUnitCode,
-                period: mde.dataValues.period,
-                migrationId: mde.dataValues.migrationId,
+              const failedDataElements = await migrationDataElements.map(migrationDataElement => ({
+                dataElementId: migrationDataElement.dataValues.dataElementId,
+                value: migrationDataElement.dataValues.value,
+                organizationUnitCode: migrationDataElement.dataValues.organizationUnitCode,
+                period: migrationDataElement.dataValues.period,
+                migrationId: migrationDataElement.dataValues.migrationId,
                 attempts: 1
               }));
               await FailQueue.bulkCreate(failedDataElements);
             }
           } else {
             isMigrating = false
-            await console.log('migration done')
+            await console.log('migration done');
           }
         }
-        // acknowlegdementEmitter.emit('$migrationDone');
         if (failureOccured) {
-          await pushToFailureQueue(migrationId);
+          await pushToFailureQueue(migrationId, "openlmis@openlmis.org", "openlmis");
+        } else {
+          //replace with real email
+          await sendEmail(migrationId, 'openlmis@gmail.com', false);
+          await console.log('email sent');
         }
-        //TODO: producer code for the failed queue
+        //reporting purposes
+        await Migration.update(
+          {
+            migrationCompletedAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+          },
+          { where: { id: migrationId } }
+        );
+        await acknowlegdementEmitter.emit('$migrationDone');
       },
       options
     );
@@ -208,13 +219,6 @@ const handleQueueConnection = async (err, conn) => {
   await conn.createChannel(handleChannel);
   spinner.stop();
 };
-
-{
-  mid,
-  email,
-  client,
-  flag
-}
 
 require("dotenv").config();
 

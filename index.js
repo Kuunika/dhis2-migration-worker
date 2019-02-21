@@ -3,13 +3,10 @@ const ora = require("ora");
 const axios = require("axios");
 const _ = require('lodash');
 const EventEmitter = require('events');
-const _Sequelize = require('sequelize');
 const moment = require('moment');
 
 const {
-  getClientModel,
   getMigrationModel,
-  getDataSetModel,
   getMigrationDataElementsModel,
   getDataElementModel,
   getFailQueueModel
@@ -21,7 +18,7 @@ const options = {
   noAck: false
 };
 
-const sendEmail = (
+const sendEmail = async (
   migrationId,
   email,
   flag) => {
@@ -61,8 +58,6 @@ const handleQueueConnection = async (err, conn) => {
   const sequelize = await require("./database")(spinner);
 
   const Migration = await getMigrationModel(sequelize);
-  const Client = await getClientModel(sequelize);
-  const DataSet = await getDataSetModel(sequelize);
   const MigrationDataElements = await getMigrationDataElementsModel(sequelize);
   const DataElement = await getDataElementModel(sequelize);
   const FailQueue = await getFailQueueModel(sequelize);
@@ -71,8 +66,17 @@ const handleQueueConnection = async (err, conn) => {
     //update migration model
     const migration = await Migration.findByPk(migrationId);
     const totalMigratedElements = migration.dataValues.totalMigratedElements + count;
-    await Migration.update(
+    return await Migration.update(
       { totalMigratedElements },
+      { where: { id: migrationId } }
+    );
+  }
+
+  const completeMigration = async (migrationId) => {
+    return await Migration.update(
+      {
+        migrationCompletedAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+      },
       { where: { id: migrationId } }
     );
   }
@@ -117,7 +121,7 @@ const handleQueueConnection = async (err, conn) => {
     });
 
     spinner.succeed(`[*] Waiting for messages in ${q}. To exit press CTRL+C`);
-    ch.consume(
+    await ch.consume(
       q,
       async function (msg) {
         const { migrationId = null } = JSON.parse(msg.content.toString());
@@ -128,12 +132,11 @@ const handleQueueConnection = async (err, conn) => {
           ch.ack(msg);
         });
 
-        let failureOccured = false;
+        let failureOccured = false
         let isMigrating = true;
         let offset = 0;
-
-        //TODO: work on chunck size
         const limit = Number(process.env.MW_DATA_CHUNK_SIZE || 200);
+        let idsToUpdate = []
 
         while (isMigrating) {
           const where = { migrationId, isMigrated: false }
@@ -142,6 +145,7 @@ const handleQueueConnection = async (err, conn) => {
           ).catch(err => console.log(err.message));
 
           if (migrationDataElements.length != 0) {
+            console.log(`migrating for limit ${limit} and offset ${offset}`);
             //pagination increment
             offset += limit;
 
@@ -161,7 +165,7 @@ const handleQueueConnection = async (err, conn) => {
               }
             }
             const response = await axios({
-              url: `${process.env.MW_DHIS2_URL}/dataValueSets`,
+              url: `${process.env.MW_DHIS2_URL}/dataValueSet`,
               method: 'POST',
               data: {
                 dataValues
@@ -171,23 +175,14 @@ const handleQueueConnection = async (err, conn) => {
                 password: process.env.MW_DHIS2_PASSWORD
               }
             }).catch(err => console.log(err.message));
-
             //all good here
             if (response) {
               await updateOnSucessfullMigration(migrationId, dataValues.length);
-              const ids = await dataValues.map(dataValue => dataValue.id);
-              await MigrationDataElements.update(
-                { isMigrated: true },
-                { where: { id: ids } }
-              );
+              idsToUpdate = [...idsToUpdate, ...dataValues.map(dataValue => dataValue.id)];
             } else {
               failureOccured = true;
               const failedDataElements = await migrationDataElements.map(migrationDataElement => ({
-                dataElementId: migrationDataElement.dataValues.dataElementId,
-                value: migrationDataElement.dataValues.value,
-                organizationUnitCode: migrationDataElement.dataValues.organizationUnitCode,
-                period: migrationDataElement.dataValues.period,
-                migrationId: migrationDataElement.dataValues.migrationId,
+                ...migrationDataElement.dataValues,
                 attempts: 1
               }));
               await FailQueue.bulkCreate(failedDataElements);
@@ -203,27 +198,25 @@ const handleQueueConnection = async (err, conn) => {
           //replace with real email
           await sendEmail(migrationId, 'openlmis@gmail.com', false);
           await console.log('email sent');
+          await MigrationDataElements.update(
+            { isMigrated: true },
+            { where: { id: idsToUpdate } }
+          );
         }
         //reporting purposes
-        await Migration.update(
-          {
-            migrationCompletedAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
-          },
-          { where: { id: migrationId } }
-        );
-        await acknowlegdementEmitter.emit('$migrationDone');
+        await completeMigration(migrationId);
+        await acknowlegdementEmitter.emit('$migrationDone')
       },
       options
     );
   };
-  await conn.createChannel(handleChannel);
+  await conn.createChannel(async (err, ch) => await handleChannel(err, ch));
   spinner.stop();
 };
 
 require("dotenv").config();
-
-const host = process.env.MW_QUEUE_HOST || "amqp://localhost";
+const host = process.env.MW_QUEUE_HOST || "amqp://localhost"
 amqp.connect(
   host,
-  handleQueueConnection
+  async (err, conn) => await handleQueueConnection(err, conn)
 );

@@ -165,7 +165,7 @@ const handleQueueConnection = async (err, conn) => {
               }
             }
             const response = await axios({
-              url: `${process.env.MW_DHIS2_URL}/dataValueSet`,
+              url: `${process.env.MW_DHIS2_URL}/dataValueSets`,
               method: 'POST',
               data: {
                 dataValues

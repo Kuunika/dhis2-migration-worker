@@ -39,8 +39,10 @@ const sendEmail = async (
           process.env.MW_EMAIL_QUEUE_NAME ||
           'DHIS2_EMAIL_INTEGRATION_QUEUE';
 
+        const source = "migration"
+
         ch.assertQueue(queueName, options);
-        const message = JSON.stringify({ migrationId, email, flag });
+        const message = JSON.stringify({ migrationId, email, flag, source });
         ch.sendToQueue(queueName, Buffer.from(message), {
           persistent: true,
         });

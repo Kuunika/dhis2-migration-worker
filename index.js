@@ -40,7 +40,6 @@ const sendEmail = async (
           'DHIS2_EMAIL_INTEGRATION_QUEUE';
 
         const source = "migration"
-
         ch.assertQueue(queueName, options);
         const message = JSON.stringify({ migrationId, email, flag, source });
         ch.sendToQueue(queueName, Buffer.from(message), {

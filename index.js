@@ -23,7 +23,8 @@ const sendEmail = async (
   migrationId,
   email,
   flag,
-  logger) => {
+  logger,
+  channelId) => {
   const host = process.env.MW_EMAIL_QUEUE_HOST || 'amqp://localhost';
 
   amqp.connect(
@@ -43,7 +44,7 @@ const sendEmail = async (
 
         const source = "migration"
         ch.assertQueue(queueName, options);
-        const message = JSON.stringify({ migrationId, email, flag, source });
+        const message = JSON.stringify({ migrationId, email, flag, source, channelId });
         ch.sendToQueue(queueName, Buffer.from(message), {
           persistent: true,
         });
@@ -88,7 +89,8 @@ const handleQueueConnection = async (err, conn) => {
     migrationId,
     email,
     client,
-    logger
+    logger,
+    channelId
   ) => {
     const host = process.env.MW_FAILURE_QUEUE_HOST || 'amqp://localhost';
     amqp.connect(
@@ -106,7 +108,7 @@ const handleQueueConnection = async (err, conn) => {
             'DHIS2_INTEGRATION_FAIL_QUEUE';
 
           ch.assertQueue(queueName, options);
-          const message = JSON.stringify({ migrationId, email, client });
+          const message = JSON.stringify({ migrationId, email, client, channelId });
           ch.sendToQueue(queueName, Buffer.from(message), {
             persistent: true,
           });
@@ -198,10 +200,10 @@ const handleQueueConnection = async (err, conn) => {
           }
         }
         if (failureOccured) {
-          await pushToFailureQueue(migrationId, "openlmis@openlmis.org", "openlmis", logger);
+          await pushToFailureQueue(migrationId, "openlmis@openlmis.org", "openlmis", logger, channelId);
         } else {
           //TODO: replace with real email
-          await sendEmail(migrationId, 'openlmis@gmail.com', false);
+          await sendEmail(migrationId, 'openlmis@gmail.com', false, logger, channelId);
           logger.info('email sent')
           await MigrationDataElements.update(
             { isMigrated: true },

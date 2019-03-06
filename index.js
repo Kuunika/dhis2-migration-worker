@@ -4,6 +4,7 @@ const axios = require("axios");
 const _ = require('lodash');
 const EventEmitter = require('events');
 const moment = require('moment');
+const { Logger } = require('./utils/logger');
 
 const {
   getMigrationModel,
@@ -21,13 +22,14 @@ const options = {
 const sendEmail = async (
   migrationId,
   email,
-  flag) => {
+  flag,
+  logger) => {
   const host = process.env.MW_EMAIL_QUEUE_HOST || 'amqp://localhost';
 
   amqp.connect(
     host,
     function (err, conn) {
-      if (err) console.log(err);
+      if (err) logger.info(err.message);
       conn.createChannel(function (err, ch) {
         if (err) console.log(err);
 
@@ -45,7 +47,7 @@ const sendEmail = async (
         ch.sendToQueue(queueName, Buffer.from(message), {
           persistent: true,
         });
-        console.log(`[x] Sent ${message}`);
+        logger.info(`[x] Sent ${message}`);
         setTimeout(() => conn.close(), 500);
       });
     },
@@ -85,15 +87,16 @@ const handleQueueConnection = async (err, conn) => {
   const pushToFailureQueue = (
     migrationId,
     email,
-    client
+    client,
+    logger
   ) => {
     const host = process.env.MW_FAILURE_QUEUE_HOST || 'amqp://localhost';
     amqp.connect(
       host,
       function (err, conn) {
-        if (err) console.log(err);
+        if (err) logger.info(err.message);
         conn.createChannel(function (err, ch) {
-          if (err) console.log(err);
+          if (err) logger.info(err.message);
           const options = {
             durable: true,
           };
@@ -107,7 +110,7 @@ const handleQueueConnection = async (err, conn) => {
           ch.sendToQueue(queueName, Buffer.from(message), {
             persistent: true,
           });
-          console.log(`[x] Sent ${message} to failure queue`);
+          logger.info(`[x] Sent ${message} to failure queue`);
           setTimeout(() => conn.close(), 500);
         });
       },
@@ -120,17 +123,18 @@ const handleQueueConnection = async (err, conn) => {
     ch.assertQueue(q, {
       durable: true
     });
-
     spinner.succeed(`[*] Waiting for messages in ${q}. To exit press CTRL+C`);
     await ch.consume(
       q,
       async function (msg) {
-        const { migrationId = null } = JSON.parse(msg.content.toString());
-
+        const { migrationId = null, channelId } = JSON.parse(msg.content.toString());
+        const logger = new Logger(channelId);
+        logger.info('Starting migration into DHIS2')
         //acknowlegde on migration finished
         const acknowlegdementEmitter = new EventEmitter();
         acknowlegdementEmitter.on('$migrationDone', () => {
           ch.ack(msg);
+          logger.info('Acknowldging migration done')
         });
 
         let failureOccured = false
@@ -143,10 +147,10 @@ const handleQueueConnection = async (err, conn) => {
           const where = { migrationId, isMigrated: false }
           const migrationDataElements = await MigrationDataElements.findAll(
             { where, limit, offset }
-          ).catch(err => console.log(err.message));
+          ).catch(err => logger.info(err.message));
 
           if (migrationDataElements.length != 0) {
-            console.log(`migrating for limit ${limit} and offset ${offset}`);
+            logger.info(`migrating for limit ${limit} and offset ${offset}`)
             //pagination increment
             offset += limit;
 
@@ -154,7 +158,7 @@ const handleQueueConnection = async (err, conn) => {
             for (const migrationDataElement of migrationDataElements) {
               const dataElement = await DataElement.findByPk(
                 migrationDataElement.dataValues.dataElementId
-              ).catch(err => console.log(err.message));
+              ).catch(err => logger.info(err.message));
               if (dataElement) {
                 await dataValues.push({
                   dataElement: dataElement.dataValues.dataElementId,
@@ -175,7 +179,7 @@ const handleQueueConnection = async (err, conn) => {
                 username: process.env.MW_DHIS2_USERNAME,
                 password: process.env.MW_DHIS2_PASSWORD
               }
-            }).catch(err => console.log(err.message));
+            }).catch(err => logger.info(err.message));
             //all good here
             if (response) {
               await updateOnSucessfullMigration(migrationId, dataValues.length);
@@ -190,15 +194,15 @@ const handleQueueConnection = async (err, conn) => {
             }
           } else {
             isMigrating = false
-            await console.log('migration done');
+            logger.info('migration done')
           }
         }
         if (failureOccured) {
-          await pushToFailureQueue(migrationId, "openlmis@openlmis.org", "openlmis");
+          await pushToFailureQueue(migrationId, "openlmis@openlmis.org", "openlmis", logger);
         } else {
-          //replace with real email
+          //TODO: replace with real email
           await sendEmail(migrationId, 'openlmis@gmail.com', false);
-          await console.log('email sent');
+          logger.info('email sent')
           await MigrationDataElements.update(
             { isMigrated: true },
             { where: { id: idsToUpdate } }

@@ -50,7 +50,7 @@ CREATE DATABASE `dhis2-integration-mediator`;
 use `dhis2-integration-mediator`;
 
 # load database structure
-source data/failqueue.sql;
+source data/schema.sql;
 
 # exist from mysql
 \q

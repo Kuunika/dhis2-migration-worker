@@ -5,8 +5,12 @@ import {
   STRING
 } from 'sequelize';
 
-const tableName = 'client';
-const fields: DefineModelAttributes<object> = { name: STRING };
+const tableName = 'Client';
+
+const fields: DefineModelAttributes<object> = {
+  name: STRING,
+  email: STRING,
+};
 
 const defineOptions: DefineOptions<object> = {
   freezeTableName: true,

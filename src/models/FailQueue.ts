@@ -2,22 +2,14 @@ import {
   DefineOptions,
   DefineModelAttributes,
   Sequelize,
-  STRING,
-  BOOLEAN,
   BIGINT
 } from 'sequelize';
 const tableName = 'failqueue';
 
 const fields: DefineModelAttributes<object> = {
-  organizationUnitCode: STRING,
-  dataElementId: BIGINT(11),
   migrationId: BIGINT(11),
-  value: BIGINT(11),
-  isProcessed: BOOLEAN,
-  isMigrated: BOOLEAN,
-  period: STRING,
+  productId: BIGINT(11),
   attempts: BIGINT(11),
-  migratedAt: STRING,
 };
 
 const options: DefineOptions<object> = {

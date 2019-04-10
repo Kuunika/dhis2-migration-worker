@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 
 import {
   createMigrationDataElements,
-  createDataElementModel,
+  createProductsModel,
   createFailQueueModel
 } from '../models';
 
@@ -14,7 +14,7 @@ export const createChunkCounter = async (
   chunkSize: number
 ): Promise<number[]> => {
   const MigrationDataElement = await createMigrationDataElements(sequelize);
-  const where = { migrationId, isMigrated: false };
+  const where = { migrationId, isProcessed: false };
 
   const migrationDataElementsCount = await MigrationDataElement.count({
     where,
@@ -32,7 +32,7 @@ export const getMigrationDataElements = async (
 ) => {
   const MigrationDataElement = await createMigrationDataElements(sequelize);
 
-  const where = { migrationId, isMigrated: false };
+  const where = { migrationId, isProcessed: false };
   const migrationDataElements = await MigrationDataElement.findAll({
     where,
     limit: chunkSize,
@@ -49,35 +49,25 @@ export const generateDHIS2Payload = async (
   const dhis2DataElements: DHIS2DataElement[] = [];
   const migrationDataElementsIds: number[] = [];
 
-  const DataElement = await createDataElementModel(sequelize);
-
   for (const migrationDataElement of migrationDataElements) {
     const { dataValues } = migrationDataElement;
 
     const {
       id,
       value,
-      dataElementId,
-      period,
+      dataElementCode,
       organizationUnitCode,
+      reportingPeriod,
     } = dataValues;
 
     await migrationDataElementsIds.push(id);
 
-    const dataElement = await DataElement.findByPk(dataElementId).catch(
-      handleError
-    );
-
-    if (dataElement) {
-      await dhis2DataElements.push({
-        dataElement: dataElement.dataValues.dataElementId,
-        orgUnit: organizationUnitCode,
-        period,
-        value,
-      });
-    } else {
-      console.log('data element missing');
-    }
+    await dhis2DataElements.push({
+      dataElement: dataElementCode,
+      orgUnit: organizationUnitCode,
+      period: reportingPeriod,
+      value,
+    });
   }
 
   return [dhis2DataElements, migrationDataElementsIds];
@@ -114,9 +104,9 @@ export const persistFailQueueDataElements = async (
 
     if (migrationDataElement) {
       await FailQueue.create({
-        ...migrationDataElement.dataValues,
+        migrationId: migrationDataElement.dataValues.migrationId,
+        productId: migrationDataElement.dataValues.productId,
         attempts: 1,
-        isProcessed: false,
       });
     } else {
       console.log('Migration Data Element not available');

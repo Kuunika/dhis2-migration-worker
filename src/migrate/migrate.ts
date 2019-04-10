@@ -25,7 +25,6 @@ export const migrate = async (
 
   const pusherLogger = await new PusherLogger(channelId);
 
-  // TODO: 2. create a looping array
   const chunkCounter = await createChunkCounter(
     sequelize,
     migrationId,
@@ -37,7 +36,6 @@ export const migrate = async (
   let migrationDataElementSuccessfulMigrationIds: number[] = [0];
 
   for (const _counter of chunkCounter) {
-    // TODO: 1. Get data
     const migrationDataElements = await getMigrationDataElements(
       sequelize,
       migrationId,
@@ -47,7 +45,6 @@ export const migrate = async (
 
     await pusherLogger.info(`chunk ${offset + 1} of ${chunkCounter.length}`);
 
-    // TODO: generate DHIS2 Payload
     const [
       dhis2DataElements,
       migrationDataElementsIds,
@@ -77,13 +74,13 @@ export const migrate = async (
   await updateMigrationDataElements(
     sequelize,
     migrationDataElementFailedMigrationIds,
-    { isMigrated: false, isProcessed: true }
+    { isProcessed: true }
   );
 
   await updateMigrationDataElements(
     sequelize,
     migrationDataElementSuccessfulMigrationIds,
-    { isMigrated: true, isProcessed: true }
+    { isProcessed: true }
   );
 
   if (hasMigrationFailed) {

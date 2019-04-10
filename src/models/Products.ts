@@ -2,16 +2,15 @@ import {
   DefineOptions,
   DefineModelAttributes,
   Sequelize,
-  STRING,
-  BIGINT
+  STRING
 } from 'sequelize';
 
-const tableName = 'dataelement';
+const tableName = 'Products';
 
 const fields: DefineModelAttributes<object> = {
-  dataSetId: BIGINT(11),
-  dataElementId: STRING,
-  dataElementName: STRING,
+  productCode: STRING,
+  dataElementCode: STRING,
+  openLMISCode: STRING,
 };
 
 const options: DefineOptions<object> = {
@@ -20,6 +19,8 @@ const options: DefineOptions<object> = {
   timestamps: false,
 };
 
-export const createDataElementModel = async (
+export const createProductsModel = async (
   sequelize: Sequelize
-): Promise<any> => await sequelize.define(tableName, fields, options);
+): Promise<any> => {
+  return await sequelize.define(tableName, fields, options);
+};

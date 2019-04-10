@@ -10,15 +10,15 @@ import {
 const tableName = 'MigrationDataElements';
 
 const fields: DefineModelAttributes<object> = {
-  organizationUnitCode: STRING,
-  dataElementId: BIGINT(11),
+  productId: BIGINT(11),
   migrationId: BIGINT(11),
+  facilityId: BIGINT(11),
   value: BIGINT(11),
-  isValueValid: BOOLEAN,
-  isElementAuthorized: BOOLEAN,
+  dataElementCode: STRING,
+  organizationUnitCode: STRING,
   isProcessed: BOOLEAN,
-  isMigrated: BOOLEAN,
-  period: STRING,
+  migratedAt: STRING,
+  reportingPeriod: STRING,
 };
 
 const options: DefineOptions<object> = {

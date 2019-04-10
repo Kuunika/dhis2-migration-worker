@@ -1,10 +1,6 @@
 import { Sequelize } from 'sequelize';
 
-import {
-  createMigrationDataElements,
-  createProductsModel,
-  createFailQueueModel
-} from '../models';
+import { createMigrationDataElements, createFailQueueModel } from '../models';
 
 import { DHIS2DataElement } from './interfaces';
 

@@ -11,7 +11,8 @@ import {
   generateDHIS2Payload,
   persistSuccessfulMigrationDataElements,
   persistFailedMigrationDataElements,
-  persistFailQueueDataElements
+  persistFailQueueDataElements,
+  updateMigration
 } from './modules';
 
 let hasMigrationFailed = false;
@@ -94,6 +95,13 @@ export const migrate = async (
   } else {
     await pushToEmailQueue(worker, message);
   }
+
+  await updateMigration(
+    sequelize,
+    migrationId,
+    migrationDataElementFailedMigrationIds.slice(1),
+    migrationDataElementSuccessfulMigrationIds.slice(1)
+  );
 
   migrationDataElementFailedMigrationIds = [0];
   migrationDataElementSuccessfulMigrationIds = [0];

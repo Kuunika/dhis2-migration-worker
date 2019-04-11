@@ -5,3 +5,4 @@ export * from './handleError';
 export * from './persistFailQueueDataElements';
 export * from './persistSuccessfulMigrationDataElements';
 export * from './persistFailedMigrationDataElements';
+export * from './updateMigration';

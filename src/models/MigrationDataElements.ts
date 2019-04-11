@@ -28,6 +28,6 @@ const options: DefineOptions<object> = {
   timestamps: false,
 };
 
-export const createMigrationDataElements = async (
+export const createMigrationDataElementsModel = async (
   sequelize: Sequelize
 ): Promise<any> => await sequelize.define(tableName, fields, options);

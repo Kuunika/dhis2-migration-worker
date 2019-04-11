@@ -4,9 +4,9 @@ import Worker = require('tortoise');
 import { isDHISMigrationSuccessful, sendDhis2Payload } from '../query';
 
 import { PusherLogger } from '../Logger';
+import { createChunkCounter } from './modules';
 
 import {
-  createChunkCounter,
   getMigrationDataElements,
   generateDHIS2Payload,
   updateMigrationDataElements,

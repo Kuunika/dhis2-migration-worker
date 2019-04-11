@@ -31,5 +31,6 @@ export const sendDhis2Payload = async (
     url,
   };
 
+  console.log(options);
   return await axios(options).catch((err: Error) => log(err.message));
 };

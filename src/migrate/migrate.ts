@@ -50,8 +50,11 @@ export const migrate = async (
       migrationDataElementsIds,
     ] = await generateDHIS2Payload(sequelize, migrationDataElements);
 
+    console.log(dhis2DataElements);
+
     // TODO: push data to dhis2\
     const dhis2Response = await sendDhis2Payload(dhis2DataElements);
+
     const wasDHIS2MigrationSuccessful = isDHISMigrationSuccessful(
       dhis2Response,
       dhis2DataElements.length
@@ -71,18 +74,6 @@ export const migrate = async (
     offset++;
   }
 
-  await updateMigrationDataElements(
-    sequelize,
-    migrationDataElementFailedMigrationIds,
-    { isProcessed: true }
-  );
-
-  await updateMigrationDataElements(
-    sequelize,
-    migrationDataElementSuccessfulMigrationIds,
-    { isProcessed: true }
-  );
-
   if (hasMigrationFailed) {
     await persistFailQueueDataElements(
       sequelize,
@@ -91,6 +82,11 @@ export const migrate = async (
 
     await pushToFailQueue(worker, message);
   } else {
+    await updateMigrationDataElements(
+      sequelize,
+      migrationDataElementSuccessfulMigrationIds,
+      { isProcessed: true }
+    );
     await pushToEmailQueue(worker, message);
   }
 

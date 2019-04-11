@@ -4,7 +4,8 @@ import {
   Sequelize,
   STRING,
   BOOLEAN,
-  BIGINT
+  BIGINT,
+  DATE
 } from 'sequelize';
 
 const tableName = 'MigrationDataElements';
@@ -17,7 +18,7 @@ const fields: DefineModelAttributes<object> = {
   dataElementCode: STRING,
   organizationUnitCode: STRING,
   isProcessed: BOOLEAN,
-  migratedAt: Date,
+  migratedAt: DATE,
   reportingPeriod: STRING,
 };
 

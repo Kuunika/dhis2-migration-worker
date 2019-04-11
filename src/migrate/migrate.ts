@@ -85,7 +85,7 @@ export const migrate = async (
     await updateMigrationDataElements(
       sequelize,
       migrationDataElementSuccessfulMigrationIds,
-      { isProcessed: true }
+      { isProcessed: true, migratedAt: new Date(Date.now()) }
     );
     await pushToEmailQueue(worker, message);
   }

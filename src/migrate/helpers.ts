@@ -10,7 +10,7 @@ export const createChunkCounter = async (
   chunkSize: number
 ): Promise<number[]> => {
   const MigrationDataElement = await createMigrationDataElements(sequelize);
-  const where = { migrationId, isProcessed: false };
+  const where = { migrationId, migratedAt: null };
 
   const migrationDataElementsCount = await MigrationDataElement.count({
     where,
@@ -28,7 +28,7 @@ export const getMigrationDataElements = async (
 ) => {
   const MigrationDataElement = await createMigrationDataElements(sequelize);
 
-  const where = { migrationId, isProcessed: false };
+  const where = { migrationId, migratedAt: null };
   const migrationDataElements = await MigrationDataElement.findAll({
     where,
     limit: chunkSize,

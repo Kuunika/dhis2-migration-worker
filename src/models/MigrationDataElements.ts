@@ -17,7 +17,7 @@ const fields: DefineModelAttributes<object> = {
   dataElementCode: STRING,
   organizationUnitCode: STRING,
   isProcessed: BOOLEAN,
-  migratedAt: STRING,
+  migratedAt: Date,
   reportingPeriod: STRING,
 };
 

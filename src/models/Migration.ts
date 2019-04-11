@@ -1,27 +1,35 @@
-const Sequelize = require('sequelize');
+import {
+  DefineOptions,
+  DefineModelAttributes,
+  Sequelize,
+  BIGINT,
+  DATE
+} from 'sequelize';
 
-const tableName = 'migration';
+const tableName = 'Migration';
 
-const fields = {
-  uploadedAt: Sequelize.STRING,
-  structureValidatedAt: Sequelize.STRING,
-  structureFailedValidationAt: Sequelize.STRING,
-  elementsAuthorizationAt: Sequelize.STRING,
-  elementsFailedAuthorizationAt: Sequelize.STRING,
-  valuesValidatedAt: Sequelize.STRING,
-  valuesFailedValidationAt: Sequelize.STRING,
-  reportDispatchedAt: Sequelize.STRING,
-  totalMigratedElements: Sequelize.BIGINT(11),
-  totalDataElements: Sequelize.BIGINT(11),
-  totalFailedElements: Sequelize.BIGINT(11),
-  migrationCompletedAt: Sequelize.STRING,
-  clientId: Sequelize.BIGINT(11),
+const fields: DefineModelAttributes<object> = {
+  uploadedAt: DATE,
+  structureValidatedAt: DATE,
+  structureFailedValidationAt: DATE,
+  elementsAuthorizationAt: DATE,
+  elementsFailedAuthorizationAt: DATE,
+  valuesValidatedAt: DATE,
+  valuesFailedValidationAt: DATE,
+  reportDispatchedAt: DATE,
+  totalMigratedElements: BIGINT(1),
+  totalDataElements: BIGINT(1),
+  totalFailedElements: BIGINT(1),
+  migrationCompletedAt: DATE,
+  clientId: BIGINT(1),
 };
 
-const options = {
+const options: DefineOptions<object> = {
   freezeTableName: true,
   tableName,
   timestamps: false,
 };
 
-module.exports = sequelize => sequelize.define(tableName, fields, options);
+export const createMigrationModel = async (
+  sequelize: Sequelize
+): Promise<any> => await sequelize.define(tableName, fields, options);

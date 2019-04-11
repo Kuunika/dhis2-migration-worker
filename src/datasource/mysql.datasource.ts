@@ -31,14 +31,14 @@ export const connectToDatabase = async (
     pool,
   };
 
-  const sequelize = await new Sequelize(database, username, password, options);
-  checkConnectionStatus(sequelize);
+  const connection = await new Sequelize(database, username, password, options);
+  checkConnectionStatus(connection);
 
-  return sequelize;
+  return connection;
 };
 
-const checkConnectionStatus = (sequelize: Sequelize): void => {
-  sequelize
+const checkConnectionStatus = (connection: Sequelize): void => {
+  connection
     .authenticate()
     .then(() => console.log('connection established successfully to database'))
     .catch(err => console.log(err.message));

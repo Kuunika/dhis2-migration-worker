@@ -5,7 +5,7 @@ import { consume, createWorker, Message } from './helpers';
 import { migrate } from '../migrate';
 
 export const startWorker = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   host: string,
   queueName: string,
   chunkSize: number
@@ -14,12 +14,10 @@ export const startWorker = async (
 
   const callback = async (message: string, ack: () => void) => {
     try {
-      // TODO: format the message
       const parsedMessage: Message = await JSON.parse(message);
 
-      // TODO: migrate data
       const hasMigrated = await migrate(
-        sequelize,
+        connection,
         worker,
         parsedMessage,
         chunkSize

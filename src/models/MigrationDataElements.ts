@@ -4,7 +4,8 @@ import {
   Sequelize,
   STRING,
   BOOLEAN,
-  BIGINT
+  BIGINT,
+  DATE
 } from 'sequelize';
 
 const tableName = 'MigrationDataElements';
@@ -17,7 +18,7 @@ const fields: DefineModelAttributes<object> = {
   dataElementCode: STRING,
   organizationUnitCode: STRING,
   isProcessed: BOOLEAN,
-  migratedAt: STRING,
+  migratedAt: DATE,
   reportingPeriod: STRING,
 };
 
@@ -27,6 +28,6 @@ const options: DefineOptions<object> = {
   timestamps: false,
 };
 
-export const createMigrationDataElements = async (
+export const createMigrationDataElementsModel = async (
   sequelize: Sequelize
 ): Promise<any> => await sequelize.define(tableName, fields, options);

@@ -9,14 +9,16 @@ import {
   createChunkCounter,
   getMigrationDataElements,
   generateDHIS2Payload,
-  updateMigrationDataElements,
-  persistFailQueueDataElements
-} from './helpers';
+  persistSuccessfulMigrationDataElements,
+  persistFailedMigrationDataElements,
+  persistFailQueueDataElements,
+  updateMigration
+} from './modules';
 
 let hasMigrationFailed = false;
 
 export const migrate = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   worker: Worker,
   message: Message,
   chunkSize: number
@@ -26,7 +28,7 @@ export const migrate = async (
   const pusherLogger = await new PusherLogger(channelId);
 
   const chunkCounter = await createChunkCounter(
-    sequelize,
+    connection,
     migrationId,
     chunkSize
   );
@@ -37,7 +39,7 @@ export const migrate = async (
 
   for (const _counter of chunkCounter) {
     const migrationDataElements = await getMigrationDataElements(
-      sequelize,
+      connection,
       migrationId,
       offset,
       chunkSize
@@ -48,10 +50,10 @@ export const migrate = async (
     const [
       dhis2DataElements,
       migrationDataElementsIds,
-    ] = await generateDHIS2Payload(sequelize, migrationDataElements);
+    ] = await generateDHIS2Payload(migrationDataElements);
 
-    // TODO: push data to dhis2\
     const dhis2Response = await sendDhis2Payload(dhis2DataElements);
+
     const wasDHIS2MigrationSuccessful = isDHISMigrationSuccessful(
       dhis2Response,
       dhis2DataElements.length
@@ -71,21 +73,21 @@ export const migrate = async (
     offset++;
   }
 
-  await updateMigrationDataElements(
-    sequelize,
-    migrationDataElementFailedMigrationIds,
-    { isProcessed: true }
+  await persistSuccessfulMigrationDataElements(
+    connection,
+    migrationDataElementSuccessfulMigrationIds,
+    { isProcessed: true, migratedAt: new Date(Date.now()) }
   );
 
-  await updateMigrationDataElements(
-    sequelize,
-    migrationDataElementSuccessfulMigrationIds,
+  await persistFailedMigrationDataElements(
+    connection,
+    migrationDataElementFailedMigrationIds,
     { isProcessed: true }
   );
 
   if (hasMigrationFailed) {
     await persistFailQueueDataElements(
-      sequelize,
+      connection,
       migrationDataElementFailedMigrationIds.slice(1)
     );
 
@@ -93,6 +95,13 @@ export const migrate = async (
   } else {
     await pushToEmailQueue(worker, message);
   }
+
+  await updateMigration(
+    connection,
+    migrationId,
+    migrationDataElementFailedMigrationIds.slice(1),
+    migrationDataElementSuccessfulMigrationIds.slice(1)
+  );
 
   migrationDataElementFailedMigrationIds = [0];
   migrationDataElementSuccessfulMigrationIds = [0];

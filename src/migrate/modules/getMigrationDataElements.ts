@@ -3,13 +3,13 @@ import { Sequelize } from 'sequelize';
 import { handleError } from '.';
 
 export const getMigrationDataElements = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   migrationId: number,
   offset: number,
   chunkSize: number
 ) => {
   const MigrationDataElement = await createMigrationDataElementsModel(
-    sequelize
+    connection
   ).catch(handleError);
 
   const where = {

@@ -3,12 +3,12 @@ import { Sequelize } from 'sequelize';
 import { handleError } from '.';
 
 export const updateMigration = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   migrationId: number,
   migrationDataElementsFailed: number[],
   migrationDataElementsSuccess: number[]
 ): Promise<void> => {
-  const Migration = await createMigrationModel(sequelize).catch(handleError);
+  const Migration = await createMigrationModel(connection).catch(handleError);
 
   const where = { id: migrationId };
 

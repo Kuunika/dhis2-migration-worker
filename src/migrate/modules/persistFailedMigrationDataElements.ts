@@ -4,12 +4,12 @@ import { handleError } from '.';
 import { createMigrationDataElementsModel } from '../../models';
 
 export const persistFailedMigrationDataElements = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   ids: number[],
   update: object
 ): Promise<void> => {
   const MigrationDataElement = await createMigrationDataElementsModel(
-    sequelize
+    connection
   );
   await MigrationDataElement.update(update, { where: { id: ids } }).catch(
     handleError

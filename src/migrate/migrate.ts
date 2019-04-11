@@ -18,7 +18,7 @@ import {
 let hasMigrationFailed = false;
 
 export const migrate = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   worker: Worker,
   message: Message,
   chunkSize: number
@@ -28,7 +28,7 @@ export const migrate = async (
   const pusherLogger = await new PusherLogger(channelId);
 
   const chunkCounter = await createChunkCounter(
-    sequelize,
+    connection,
     migrationId,
     chunkSize
   );
@@ -39,7 +39,7 @@ export const migrate = async (
 
   for (const _counter of chunkCounter) {
     const migrationDataElements = await getMigrationDataElements(
-      sequelize,
+      connection,
       migrationId,
       offset,
       chunkSize
@@ -74,20 +74,20 @@ export const migrate = async (
   }
 
   await persistSuccessfulMigrationDataElements(
-    sequelize,
+    connection,
     migrationDataElementSuccessfulMigrationIds,
     { isProcessed: true, migratedAt: new Date(Date.now()) }
   );
 
   await persistFailedMigrationDataElements(
-    sequelize,
+    connection,
     migrationDataElementFailedMigrationIds,
     { isProcessed: true }
   );
 
   if (hasMigrationFailed) {
     await persistFailQueueDataElements(
-      sequelize,
+      connection,
       migrationDataElementFailedMigrationIds.slice(1)
     );
 
@@ -97,7 +97,7 @@ export const migrate = async (
   }
 
   await updateMigration(
-    sequelize,
+    connection,
     migrationId,
     migrationDataElementFailedMigrationIds.slice(1),
     migrationDataElementSuccessfulMigrationIds.slice(1)

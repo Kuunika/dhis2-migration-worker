@@ -8,13 +8,13 @@ import {
 import { handleError } from '.';
 
 export const persistFailQueueDataElements = async (
-  sequelize: Sequelize,
+  connection: Sequelize,
   ids: number[]
 ): Promise<void> => {
   const MigrationDataElement = await createMigrationDataElementsModel(
-    sequelize
+    connection
   );
-  const FailQueue = await createFailQueueModel(sequelize);
+  const FailQueue = await createFailQueueModel(connection);
 
   for (const id of ids) {
     const migrationDataElement = await MigrationDataElement.findByPk(id).catch(

@@ -10,7 +10,7 @@ export const getMigrationDataElements = async (
 ) => {
   const MigrationDataElement = await createMigrationDataElementsModel(
     sequelize
-  );
+  ).catch(handleError);
 
   const where = {
     migrationId,

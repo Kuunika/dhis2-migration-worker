@@ -1,14 +1,9 @@
 import { Sequelize } from 'sequelize';
 
+import { handleError } from '.';
 import { createMigrationDataElementsModel } from '../../models';
 
-/**
- * Update fail queues
- *
- * @param { Connection } connection - Connection manager instance
- * @param { Where } where - Where clause.
- */
-export const updateMigrationDataElements = async (
+export const persistFailedMigrationDataElements = async (
   sequelize: Sequelize,
   ids: number[],
   update: object
@@ -16,5 +11,7 @@ export const updateMigrationDataElements = async (
   const MigrationDataElement = await createMigrationDataElementsModel(
     sequelize
   );
-  await MigrationDataElement.update(update, { where: { id: ids } });
+  await MigrationDataElement.update(update, { where: { id: ids } }).catch(
+    handleError
+  );
 };

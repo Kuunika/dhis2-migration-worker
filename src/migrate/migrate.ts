@@ -4,14 +4,15 @@ import Worker = require('tortoise');
 import { isDHISMigrationSuccessful, sendDhis2Payload } from '../query';
 
 import { PusherLogger } from '../Logger';
-import { createChunkCounter } from './modules';
 
 import {
+  createChunkCounter,
   getMigrationDataElements,
   generateDHIS2Payload,
-  updateMigrationDataElements,
+  persistSuccessfulMigrationDataElements,
+  persistFailedMigrationDataElements,
   persistFailQueueDataElements
-} from './helpers';
+} from './modules';
 
 let hasMigrationFailed = false;
 
@@ -48,7 +49,7 @@ export const migrate = async (
     const [
       dhis2DataElements,
       migrationDataElementsIds,
-    ] = await generateDHIS2Payload(sequelize, migrationDataElements);
+    ] = await generateDHIS2Payload(migrationDataElements);
 
     const dhis2Response = await sendDhis2Payload(dhis2DataElements);
 
@@ -71,6 +72,18 @@ export const migrate = async (
     offset++;
   }
 
+  await persistSuccessfulMigrationDataElements(
+    sequelize,
+    migrationDataElementSuccessfulMigrationIds,
+    { isProcessed: true, migratedAt: new Date(Date.now()) }
+  );
+
+  await persistFailedMigrationDataElements(
+    sequelize,
+    migrationDataElementFailedMigrationIds,
+    { isProcessed: true }
+  );
+
   if (hasMigrationFailed) {
     await persistFailQueueDataElements(
       sequelize,
@@ -79,11 +92,6 @@ export const migrate = async (
 
     await pushToFailQueue(worker, message);
   } else {
-    await updateMigrationDataElements(
-      sequelize,
-      migrationDataElementSuccessfulMigrationIds,
-      { isProcessed: true, migratedAt: new Date(Date.now()) }
-    );
     await pushToEmailQueue(worker, message);
   }
 

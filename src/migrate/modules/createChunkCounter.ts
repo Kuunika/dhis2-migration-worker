@@ -1,5 +1,6 @@
 import { createMigrationDataElementsModel } from '../../models';
 import { Sequelize } from 'sequelize';
+import { handleError } from '.';
 
 export const createChunkCounter = async (
   sequelize: Sequelize,
@@ -13,7 +14,7 @@ export const createChunkCounter = async (
   const where = { migrationId, migratedAt: null, isProcessed: false };
   const migrationDataElementsCount = await MigrationDataElement.count({
     where,
-  }).catch((error: Error) => console.log(error.message));
+  }).catch(handleError);
 
   const arraySize = Math.ceil(migrationDataElementsCount / chunkSize);
   return new Array(arraySize);

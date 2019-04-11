@@ -50,9 +50,6 @@ export const migrate = async (
       migrationDataElementsIds,
     ] = await generateDHIS2Payload(sequelize, migrationDataElements);
 
-    console.log(dhis2DataElements);
-
-    // TODO: push data to dhis2\
     const dhis2Response = await sendDhis2Payload(dhis2DataElements);
 
     const wasDHIS2MigrationSuccessful = isDHISMigrationSuccessful(

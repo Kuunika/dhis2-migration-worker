@@ -22,6 +22,7 @@ const fields: DefineModelAttributes<object> = {
   totalFailedElements: BIGINT(1),
   migrationCompletedAt: DATE,
   clientId: BIGINT(1),
+  createdAt: DATE,
 };
 
 const options: DefineOptions<object> = {

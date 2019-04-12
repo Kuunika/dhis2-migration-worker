@@ -20,6 +20,7 @@ const fields: DefineModelAttributes<object> = {
   isProcessed: BOOLEAN,
   migratedAt: DATE,
   reportingPeriod: STRING,
+  createdAt: DATE,
 };
 
 const options: DefineOptions<object> = {

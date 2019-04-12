@@ -26,6 +26,7 @@ export const persistFailQueueDataElements = async (
         migrationId: migrationDataElement.dataValues.migrationId,
         productId: migrationDataElement.dataValues.productId,
         attempts: 1,
+        createdAt: new Date(Date.now()),
       }).catch(handleError);
     } else {
       console.log('Migration Data Element not available');

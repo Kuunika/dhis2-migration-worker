@@ -1,6 +1,6 @@
 import {
-  DefineOptions,
-  DefineModelAttributes,
+  ModelOptions,
+  ModelAttributes,
   Sequelize,
   BIGINT,
   DATE
@@ -8,7 +8,7 @@ import {
 
 const tableName = 'Migration';
 
-const fields: DefineModelAttributes<object> = {
+const fields: ModelAttributes = {
   uploadedAt: DATE,
   structureValidatedAt: DATE,
   structureFailedValidationAt: DATE,
@@ -17,15 +17,15 @@ const fields: DefineModelAttributes<object> = {
   valuesValidatedAt: DATE,
   valuesFailedValidationAt: DATE,
   reportDispatchedAt: DATE,
-  totalMigratedElements: BIGINT(1),
-  totalDataElements: BIGINT(1),
-  totalFailedElements: BIGINT(1),
+  totalMigratedElements: BIGINT,
+  totalDataElements: BIGINT,
+  totalFailedElements: BIGINT,
   migrationCompletedAt: DATE,
-  clientId: BIGINT(1),
+  clientId: BIGINT,
   createdAt: DATE,
 };
 
-const options: DefineOptions<object> = {
+const options: ModelOptions = {
   freezeTableName: true,
   tableName,
   timestamps: false,

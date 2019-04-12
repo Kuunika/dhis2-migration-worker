@@ -1,6 +1,6 @@
 import {
-  DefineOptions,
-  DefineModelAttributes,
+  ModelOptions,
+  ModelAttributes,
   Sequelize,
   STRING,
   BOOLEAN,
@@ -10,11 +10,11 @@ import {
 
 const tableName = 'MigrationDataElements';
 
-const fields: DefineModelAttributes<object> = {
-  productId: BIGINT(11),
-  migrationId: BIGINT(11),
-  facilityId: BIGINT(11),
-  value: BIGINT(11),
+const fields: ModelAttributes = {
+  productId: BIGINT,
+  migrationId: BIGINT,
+  facilityId: BIGINT,
+  value: BIGINT,
   dataElementCode: STRING,
   organizationUnitCode: STRING,
   isProcessed: BOOLEAN,
@@ -23,7 +23,7 @@ const fields: DefineModelAttributes<object> = {
   createdAt: DATE,
 };
 
-const options: DefineOptions<object> = {
+const options: ModelOptions = {
   freezeTableName: true,
   tableName,
   timestamps: false,

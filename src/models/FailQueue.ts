@@ -1,20 +1,21 @@
+
 import {
-  DefineOptions,
-  DefineModelAttributes,
+  ModelOptions,
+  ModelAttributes,
   Sequelize,
   BIGINT,
   DATE
 } from 'sequelize';
 const tableName = 'failqueue';
 
-const fields: DefineModelAttributes<object> = {
-  migrationId: BIGINT(11),
-  productId: BIGINT(11),
-  attempts: BIGINT(11),
+const fields: ModelAttributes = {
+  migrationId: BIGINT,
+  productId: BIGINT,
+  attempts: BIGINT,
   createdAt: DATE,
 };
 
-const options: DefineOptions<object> = {
+const options: ModelOptions = {
   freezeTableName: true,
   tableName,
   timestamps: false,

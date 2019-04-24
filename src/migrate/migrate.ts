@@ -1,9 +1,7 @@
 import { Sequelize } from 'sequelize';
-import { Message, pushToEmailQueue, pushToFailQueue } from '../worker';
+import { Message, pushToEmailQueue, pushToFailQueue, pushToLogWorker } from '../worker';
 import Worker = require('tortoise');
 import { isDHISMigrationSuccessful, sendDhis2Payload } from '../query';
-
-import { PusherLogger } from '../Logger';
 
 import {
   createChunkCounter,
@@ -23,9 +21,9 @@ export const migrate = async (
   message: Message,
   chunkSize: number
 ): Promise<boolean> => {
-  const { migrationId = 0, channelId } = message;
+  const { migrationId = 0 } = message;
 
-  const pusherLogger = await new PusherLogger(channelId);
+  message.service = 'MIGRATION WORKER';
 
   const chunkCounter = await createChunkCounter(
     connection,
@@ -45,7 +43,8 @@ export const migrate = async (
       chunkSize
     );
 
-    await pusherLogger.info(`chunk ${offset + 1} of ${chunkCounter.length}`);
+    message.message = `chunk ${offset + 1} of ${chunkCounter.length}`;
+    await pushToLogWorker(worker, message);
 
     const [
       dhis2DataElements,

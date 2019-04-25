@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon",
+    "test": "jest --verbose"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +22,6 @@
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "mysql2": "^1.6.4",
-    "nodemon": "^1.18.9",
     "ora": "^3.0.0",
     "pg": "^7.8.0",
     "pg-hstore": "^2.3.2",
@@ -31,10 +31,17 @@
     "sqlite3": "^4.0.6",
     "tedious": "^4.1.3",
     "tortoise": "^1.0.1",
-    "tslib": "^1.9.3",
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "@types/winston": "^2.4.4"
+    "@types/jest": "^24.0.11",
+    "@types/prettier": "^1.16.3",
+    "@types/winston": "^2.4.4",
+    "jest": "^24.7.1",
+    "nodemon": "^1.18.11",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^8.1.0",
+    "tslib": "^1.9.3",
+    "typescript": "^3.4.5"
   }
 }

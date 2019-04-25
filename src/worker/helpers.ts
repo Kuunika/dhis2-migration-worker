@@ -4,12 +4,14 @@ const env = process.env;
 export interface Message {
   channelId: string;
   client: string;
-  email: string;
+  email?: string;
   migrationId: number;
   source?: string;
   description: string;
   migrationFailed?: boolean;
   attempts?: number;
+  message?: string;
+  service?: string;
 }
 
 /**
@@ -68,6 +70,14 @@ export const pushToEmailQueue = async (
   message.migrationFailed = false;
   message.source = 'migration';
 
+  await publishMessage(worker, queueName, message);
+};
+
+export const pushToLogWorker = async (
+  worker: Worker,
+  message: Message
+): Promise<void> => {
+  const queueName = env.MW_ADX_LOG_WORKER || 'ADX_LOG_WORKER';
   await publishMessage(worker, queueName, message);
 };
 

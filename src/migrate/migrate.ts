@@ -21,7 +21,7 @@ export const migrate = async (
   message: Message,
   chunkSize: number
 ): Promise<boolean> => {
-  const { migrationId = 0 } = message;
+  const { migrationId } = message;
 
   message.service = 'MIGRATION WORKER';
 

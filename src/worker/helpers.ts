@@ -86,7 +86,6 @@ const publishMessage = async (
   queueName: string,
   message: Message
 ): Promise<void> => {
-  console.log(message);
   const options: object = { durable: env.DFQW_QUEUE_DURABLE || true };
   await worker.queue(queueName, options).publish(message);
 };

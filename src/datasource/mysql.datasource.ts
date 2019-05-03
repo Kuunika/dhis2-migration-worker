@@ -32,13 +32,13 @@ export const connectToDatabase = async (
   };
 
   const connection = await new Sequelize(database, username, password, options);
-  checkConnectionStatus(connection);
+  await checkConnectionStatus(connection);
 
   return connection;
 };
 
-const checkConnectionStatus = (connection: Sequelize): void => {
-  connection
+const checkConnectionStatus = async (connection: Sequelize): Promise<void> => {
+  await connection
     .authenticate()
     .then(() => console.log('connection established successfully to database'))
     .catch(err => console.log(err.message));

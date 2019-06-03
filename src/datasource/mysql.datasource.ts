@@ -7,16 +7,6 @@ const pool: PoolOptions = {
   idle: 10000,
 };
 
-/**
- * Connect to a database
- *
- * @param { string } host - Database host name.
- * @param { string } database - Database name.
- * @param { string } username - Database user name.
- * @param { string } password - Database user password.
- *
- * @return { Sequelize } The x value.
- */
 export const connectToDatabase = async (
   host: string,
   database: string,
@@ -31,14 +21,25 @@ export const connectToDatabase = async (
   };
 
   const connection = await new Sequelize(database, username, password, options);
-  await checkConnectionStatus(connection);
+  const isConnected = await checkConnectionStatus(connection);
+
+  if (!isConnected) {
+    console.log('Failed to establish connection to the database');
+    process.exit();
+  }
 
   return connection;
 };
 
-const checkConnectionStatus = async (connection: Sequelize): Promise<void> => {
-  await connection
-    .authenticate()
-    .then(() => console.log('connection established successfully to database'))
-    .catch(err => console.log(err.message));
+const checkConnectionStatus = async (
+  connection: Sequelize
+): Promise<boolean> => {
+  try {
+    const successMessage = 'connection established successfully to database';
+    await connection.authenticate().then(() => console.log(successMessage));
+    return true;
+  } catch (e) {
+    console.log(e.message);
+    return false;
+  }
 };

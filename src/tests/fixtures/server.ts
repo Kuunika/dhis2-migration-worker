@@ -29,10 +29,11 @@ export const fakeDhis2Server = async (port: number, mode: modes) => {
 
   app.use(bodyParser.json({ limit: '100mb' }));
 
-  console.log(mode);
   if (mode === modes.fail) {
-    app.post('*', handleFailPost);
-  } else { app.post('*', handleSuccessfulPost); }
+    await app.post('*', handleFailPost);
+  } else {
+    await app.post('*', handleSuccessfulPost);
+  }
 
   return await app.listen(port);
 };

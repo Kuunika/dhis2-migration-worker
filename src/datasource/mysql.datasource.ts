@@ -26,7 +26,6 @@ export const connectToDatabase = async (
   const options: Options = {
     host,
     dialect: 'mysql',
-    operatorsAliases: false,
     logging: false,
     pool,
   };

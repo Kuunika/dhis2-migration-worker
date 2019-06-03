@@ -13,7 +13,6 @@ import { createMigrationModel, createMigrationDataElementsModel } from '../model
 import { createWorker, Message } from '../worker/helpers';
 import { migrate } from '../migrate/migrate';
 
-let path: string;
 let config: DotenvParseOutput;
 let connection: Sequelize;
 let testMigration: any;
@@ -25,7 +24,7 @@ let chunkSize: number;
 describe('Migration integration tests', () => {
 
   beforeEach(async () => {
-    path = join(__dirname, 'fixtures', '.env.test');
+    const path = join(__dirname, 'fixtures', '.env.test');
     config = await loadConfig(path);
 
     connection = await connectToDatabase(

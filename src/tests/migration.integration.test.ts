@@ -78,8 +78,6 @@ describe('Migration integration tests', () => {
       migrationId: testMigration.dataValues.id,
     }).catch(e => console.log(e.Message));
 
-    console.log();
-
     expect(migratedMigrationDataElement[0].dataValues.migratedAt).toEqual(migratedMigrationDataElement[1].dataValues.migratedAt);
     expect(migratedMigrationDataElement[0].dataValues.migratedAt).not.toBe(migratedMigrationDataElement[2].dataValues.migratedAt);
 

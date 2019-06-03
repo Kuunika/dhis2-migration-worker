@@ -35,6 +35,15 @@ export const migrate = async (
   let migrationDataElementFailedMigrationIds: number[] = [0];
   let migrationDataElementSuccessfulMigrationIds: number[] = [0];
 
+  await pushToLogWorker(worker, {
+    ...message,
+    message: JSON.stringify({
+      service: 'migration',
+      message: 'migration started',
+      migrating: true,
+    }),
+  });
+
   for (const _counter of chunkCounter) {
     const migrationDataElements = await getMigrationDataElements(
       connection,
@@ -43,7 +52,14 @@ export const migrate = async (
       chunkSize
     );
 
-    message.message = `chunk ${offset + 1} of ${chunkCounter.length}`;
+    message.message = JSON.stringify({
+      service: 'migration',
+      message: 'migrating elements',
+      chunkSize,
+      chunkNumber: offset + 1,
+      migrating: true,
+    });
+
     await pushToLogWorker(worker, message);
 
     const [
@@ -104,6 +120,15 @@ export const migrate = async (
 
   migrationDataElementFailedMigrationIds = [0];
   migrationDataElementSuccessfulMigrationIds = [0];
+
+  await pushToLogWorker(worker, {
+    ...message,
+    message: JSON.stringify({
+      service: 'migration',
+      message: 'migration completed',
+      migrating: false,
+    }),
+  });
 
   return hasMigrationFailed;
 };

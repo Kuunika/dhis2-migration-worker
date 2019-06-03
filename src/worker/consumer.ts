@@ -16,14 +16,12 @@ export const startWorker = async (
     try {
       const parsedMessage: Message = await JSON.parse(message);
 
-      const hasMigrated = await migrate(
+      await migrate(
         connection,
         worker,
         parsedMessage,
         chunkSize
       );
-
-      console.log(hasMigrated);
     } catch (error) {
       console.log(error.message);
     }

@@ -20,8 +20,12 @@ export const migrate = async (
   worker: Worker,
   message: Message,
   chunkSize: number
-): Promise<boolean> => {
+): Promise<void> => {
   const { migrationId } = message;
+
+  if (migrationId === 0) {
+    return;
+  }
 
   message.service = 'MIGRATION WORKER';
 
@@ -129,6 +133,4 @@ export const migrate = async (
       migrating: false,
     }),
   });
-
-  return hasMigrationFailed;
 };

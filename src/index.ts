@@ -12,7 +12,7 @@ const main = async (): Promise<void> => {
       config.MW_DATABASE_HOST || 'localhost',
       config.MW_DATABASE,
       config.MW_DATABASE_USERNAME || 'root',
-      config.MW_DATABASE_PASSWORD || 'root'
+      config.MW_DATABASE_PASSWORD || ''
     );
 
     await startWorker(

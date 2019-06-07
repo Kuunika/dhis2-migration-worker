@@ -8,7 +8,7 @@ import {
   DATE
 } from 'sequelize';
 
-const tableName = 'MigrationDataElements';
+const tableName = 'Migrationdataelements';
 
 const fields: ModelAttributes = {
   productId: BIGINT,

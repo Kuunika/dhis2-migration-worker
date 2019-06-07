@@ -6,7 +6,7 @@ import {
   BIGINT,
   DATE
 } from 'sequelize';
-const tableName = 'failqueue';
+const tableName = 'Failqueue';
 
 const fields: ModelAttributes = {
   migrationId: BIGINT,

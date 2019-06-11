@@ -10,7 +10,8 @@ import {
   persistSuccessfulMigrationDataElements,
   persistFailedMigrationDataElements,
   persistFailQueueDataElements,
-  updateMigration
+  updateMigration,
+  getTotalMigrationDataElements
 } from './modules';
 
 let hasMigrationFailed = false;
@@ -39,6 +40,8 @@ export const migrate = async (
   let migrationDataElementFailedMigrationIds: number[] = [0];
   let migrationDataElementSuccessfulMigrationIds: number[] = [0];
 
+  const totalMigrationDataElements = await getTotalMigrationDataElements(connection, message.migrationId);
+
   await pushToLogWorker(worker, {
     ...message,
     message: JSON.stringify({
@@ -61,6 +64,7 @@ export const migrate = async (
       message: 'migrating elements',
       chunkSize,
       chunkNumber: offset + 1,
+      totalElements: totalMigrationDataElements,
       migrating: true,
     });
 

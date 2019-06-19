@@ -6,3 +6,4 @@ export * from './persistFailQueueDataElements';
 export * from './persistSuccessfulMigrationDataElements';
 export * from './persistFailedMigrationDataElements';
 export * from './updateMigration';
+export * from './getTotalMigrationDataElements';

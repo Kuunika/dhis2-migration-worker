@@ -21,7 +21,6 @@ export const startWorker = async (
 
       console.log('receive message: ');
       console.log(parsedMessage);
-      console.log("hahaha");
 
       await migrate(
         connection,

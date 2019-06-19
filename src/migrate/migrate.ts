@@ -42,15 +42,13 @@ export const migrate = async (
 
   const totalMigrationDataElements = await getTotalMigrationDataElements(connection, message.migrationId);
 
-  await pushToLogWorker(worker, {
-    ...message,
-    message: JSON.stringify({
-      service: 'migration',
-      message: 'migration started',
-      migrating: true,
-    }),
-  });
+  message.message = JSON.stringify({
+    service: 'migration',
+    message: 'migration started',
+    migrating: true,
+  })
 
+  await pushToLogWorker(worker, message);
   console.log(message.message);
   console.log();
 

@@ -48,6 +48,9 @@ export const migrate = async (
     }),
   });
 
+  console.log(message.message);
+  console.log();
+
   for (const _counter of chunkCounter) {
     const migrationDataElements = await getMigrationDataElements(
       connection,
@@ -65,6 +68,7 @@ export const migrate = async (
     });
 
     await pushToLogWorker(worker, message);
+    console.log(message);
 
     const [
       dhis2DataElements,

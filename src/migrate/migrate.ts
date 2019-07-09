@@ -47,9 +47,8 @@ export const migrate = async (
     service: 'migration',
     message: 'migration started',
     migrating: true,
-  })
+  });
 
-  await pushToLogWorker(worker, message);
   console.log(message.message);
   console.log();
 
@@ -87,11 +86,11 @@ export const migrate = async (
 
     message.message = JSON.stringify({
       service: 'migration',
-      message: 'migrating elements',
+      message: `migrating chunk ${offset + 1} elements`,
       chunkSize,
       chunkNumber: offset + 1,
       totalElements: totalMigrationDataElements,
-      migrating: true,
+      migrated: true,
     });
 
     await pushToLogWorker(worker, message);
@@ -133,13 +132,4 @@ export const migrate = async (
 
   migrationDataElementFailedMigrationIds = [0];
   migrationDataElementSuccessfulMigrationIds = [0];
-
-  await pushToLogWorker(worker, {
-    ...message,
-    message: JSON.stringify({
-      service: 'migration',
-      message: 'migration completed',
-      migrating: false,
-    }),
-  });
 };

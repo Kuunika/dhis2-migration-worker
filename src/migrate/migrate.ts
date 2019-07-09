@@ -11,7 +11,8 @@ import {
   persistFailedMigrationDataElements,
   persistFailQueueDataElements,
   updateMigration,
-  getTotalMigrationDataElements
+  getTotalMigrationDataElements,
+  updateMigrationCompletedAt
 } from './modules';
 
 let hasMigrationFailed = false;
@@ -53,24 +54,13 @@ export const migrate = async (
   console.log();
 
   for (const _counter of chunkCounter) {
+    console.log(`working on chunk #: ${offset + 1}`);
     const migrationDataElements = await getMigrationDataElements(
       connection,
       migrationId,
       offset,
       chunkSize
     );
-
-    message.message = JSON.stringify({
-      service: 'migration',
-      message: 'migrating elements',
-      chunkSize,
-      chunkNumber: offset + 1,
-      totalElements: totalMigrationDataElements,
-      migrating: true,
-    });
-
-    await pushToLogWorker(worker, message);
-    console.log(message);
 
     const [
       dhis2DataElements,
@@ -95,6 +85,18 @@ export const migrate = async (
       hasMigrationFailed = true;
     }
 
+    message.message = JSON.stringify({
+      service: 'migration',
+      message: 'migrating elements',
+      chunkSize,
+      chunkNumber: offset + 1,
+      totalElements: totalMigrationDataElements,
+      migrating: true,
+    });
+
+    await pushToLogWorker(worker, message);
+    console.log(message);
+
     offset++;
   }
 
@@ -118,6 +120,7 @@ export const migrate = async (
 
     await pushToFailQueue(worker, message);
   } else {
+    await updateMigrationCompletedAt(connection, migrationId);
     await pushToEmailQueue(worker, message);
   }
 

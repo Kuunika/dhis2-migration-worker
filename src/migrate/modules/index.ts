@@ -7,3 +7,4 @@ export * from './persistSuccessfulMigrationDataElements';
 export * from './persistFailedMigrationDataElements';
 export * from './updateMigration';
 export * from './getTotalMigrationDataElements';
+export * from './updateMigrationCompletedAt';

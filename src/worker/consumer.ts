@@ -17,22 +17,24 @@ export const startWorker = async (
 
   const callback = async (message: string, ack: () => void) => {
     try {
-      const parsedMessage: Message = await JSON.parse(message);
+      await setTimeout(async () => {
+        const parsedMessage: Message = await JSON.parse(message);
 
-      console.log('receive message: ');
-      console.log(parsedMessage);
+        console.log('receive message: ');
+        console.log(parsedMessage);
 
-      await migrate(
-        connection,
-        worker,
-        parsedMessage,
-        chunkSize
-      );
+        await migrate(
+          connection,
+          worker,
+          parsedMessage,
+          chunkSize
+        );
+
+        ack();
+      }, 500);
     } catch (error) {
       console.log(error.message);
     }
-
-    ack();
   };
 
   await consume(worker, queueName, callback);

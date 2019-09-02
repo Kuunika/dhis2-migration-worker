@@ -5,13 +5,18 @@ import { DHIS2DataElement } from './helper';
 
 const log = console.log;
 
+const calculatedImportSize = (dhis2Response: any) => {
+  const { updated, imported, ignored } = dhis2Response.data.importCount;
+  console.log(`Updated ${updated}, Imported ${imported}, Ignored ${ignored}`);
+  return (Number(updated) + Number(imported) + Number(ignored));
+}
+
 export const isDHISMigrationSuccessful = (
   dhis2Response: any,
   payloadSize: number
 ): boolean => {
   if (dhis2Response) {
-    const updated = dhis2Response.data.importCount.updated;
-    if (payloadSize === Number(updated)) {
+    if (payloadSize === calculatedImportSize(dhis2Response)) {
       return true;
     }
   }

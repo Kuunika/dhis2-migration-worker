@@ -1,4 +1,5 @@
 
+import { STRING } from 'sequelize';
 import {
   ModelOptions,
   ModelAttributes,
@@ -10,7 +11,7 @@ const tableName = 'Failqueue';
 
 const fields: ModelAttributes = {
   migrationId: BIGINT,
-  productId: BIGINT,
+  dataElementCode: STRING,
   attempts: BIGINT,
   createdAt: DATE,
 };

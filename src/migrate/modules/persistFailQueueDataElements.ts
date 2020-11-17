@@ -24,7 +24,7 @@ export const persistFailQueueDataElements = async (
     if (migrationDataElement) {
       await FailQueue.create({
         migrationId: migrationDataElement.dataValues.migrationId,
-        productId: migrationDataElement.dataValues.productId,
+        dataElementCode: migrationDataElement.dataValues.dataElementCode,
         attempts: 1,
         createdAt: new Date(Date.now()),
       }).catch(handleError);

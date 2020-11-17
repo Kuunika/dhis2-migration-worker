@@ -1,6 +1,5 @@
 export const migrationDataElements = [
   {
-    productId: 1,
     facilityId: 1,
     value: 60,
     isProcessed: false,
@@ -10,7 +9,6 @@ export const migrationDataElements = [
     createdAt: '2019-04-11 12:15:03',
   },
   {
-    productId: 1,
     facilityId: 1,
     value: 60,
     isProcessed: false,
@@ -20,7 +18,6 @@ export const migrationDataElements = [
     createdAt: '2019-04-11 12:15:03',
   },
   {
-    productId: 1,
     facilityId: 1,
     value: 60,
     isProcessed: false,

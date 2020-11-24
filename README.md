@@ -1,5 +1,7 @@
 # DHIS2 Migration Worker
 
+![version](https://img.shields.io/github/package-json/v/Kuunika/dhis2-migration-worker?color=green&style=for-the-badge)
+
 ## Dependencies
 
 Migration worker uses a number of projects and dependencies to work properly:

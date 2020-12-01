@@ -12,7 +12,7 @@ const tableName = 'Migrationdataelements';
 
 const fields: ModelAttributes = {
   migrationId: BIGINT,
-  facilityId: BIGINT,
+  facilityId: STRING,
   value: BIGINT,
   dataElementCode: STRING,
   organizationUnitCode: STRING,
